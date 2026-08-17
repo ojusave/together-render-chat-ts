@@ -6,6 +6,7 @@ const form = document.getElementById("chat-form");
 const messageEl = document.getElementById("message");
 const sendEl = document.getElementById("send");
 const threadEl = document.getElementById("thread");
+const laneEl = document.getElementById("lane");
 const statusEl = document.getElementById("status");
 
 /** @type {{ role: "user" | "assistant"; content: string }[]} */
@@ -16,14 +17,15 @@ if (signup instanceof HTMLAnchorElement) {
 }
 
 function addBubble(role, text) {
-  if (!threadEl) return;
-  const empty = threadEl.querySelector(".empty");
+  if (!laneEl) return;
+  const empty = laneEl.querySelector(".empty");
   empty?.remove();
   const bubble = document.createElement("div");
   bubble.className = `bubble ${role}`;
   bubble.textContent = text;
-  threadEl.append(bubble);
-  threadEl.scrollTop = threadEl.scrollHeight;
+  laneEl.append(bubble);
+  if (threadEl) threadEl.scrollTop = threadEl.scrollHeight;
+  return bubble;
 }
 
 async function loadHealth() {
@@ -42,20 +44,18 @@ async function loadHealth() {
   }
 }
 
-form?.addEventListener("submit", async (event) => {
-  event.preventDefault();
+async function sendMessage() {
   const message =
     messageEl instanceof HTMLTextAreaElement ? messageEl.value.trim() : "";
   if (!message) return;
+  if (sendEl instanceof HTMLButtonElement && sendEl.disabled) return;
 
   addBubble("user", message);
   history.push({ role: "user", content: message });
   if (messageEl instanceof HTMLTextAreaElement) messageEl.value = "";
   if (sendEl instanceof HTMLButtonElement) sendEl.disabled = true;
-  if (statusEl) {
-    statusEl.textContent = "Thinking…";
-    statusEl.className = "status";
-  }
+  if (statusEl) statusEl.textContent = "Thinking…";
+  const pending = addBubble("assistant pending", "Thinking…");
 
   try {
     const res = await fetch("/ui/chat", {
@@ -69,18 +69,31 @@ form?.addEventListener("submit", async (event) => {
         data.error || data.detail?.message || data.detail || `HTTP ${res.status}`
       );
     }
+    pending?.remove();
     addBubble("assistant", data.reply);
     history.push({ role: "assistant", content: data.reply });
     if (statusEl) statusEl.textContent = "";
   } catch (error) {
     const text = error instanceof Error ? error.message : "Request failed.";
-    addBubble("assistant", text);
-    if (statusEl) {
-      statusEl.textContent = text;
-      statusEl.className = "status err";
-    }
+    pending?.remove();
+    addBubble("error", text);
+    if (statusEl) statusEl.textContent = text;
   } finally {
     if (sendEl instanceof HTMLButtonElement) sendEl.disabled = false;
+    messageEl instanceof HTMLTextAreaElement && messageEl.focus();
+  }
+}
+
+form?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  void sendMessage();
+});
+
+messageEl?.addEventListener("keydown", (event) => {
+  if (!(event instanceof KeyboardEvent)) return;
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    void sendMessage();
   }
 });
 

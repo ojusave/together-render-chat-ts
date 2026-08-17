@@ -1,19 +1,19 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@300&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
 @import url("chat.css");
 
 :root {
-  --bg: #fafafa;
-  --header: #ffffff;
-  --ink: #0d0d0d;
-  --muted: #4d4d4d;
-  --line: #e3e3e3;
-  --surface: #ffffff;
-  --accent: #8a05ff;
-  --accent-ink: #ffffff;
-  --user: #f4f0ff;
+  --bg: var(--color-background);
+  --header: var(--color-card);
+  --ink: var(--color-foreground);
+  --muted: var(--color-muted-foreground);
+  --line: var(--color-border);
+  --surface: var(--color-card);
+  --accent: var(--color-primary);
+  --accent-ink: var(--color-primary-foreground);
+  --user: #f3e8ff;
   --ok: #009e7a;
-  --err: #e23642;
-  --gutter: 1.5rem;
+  --err: var(--color-destructive);
+  --gutter: 1.25rem;
 }
 
 * {
@@ -23,7 +23,7 @@
 html,
 body {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
 }
 
 body {
@@ -33,14 +33,6 @@ body {
   font-family: Inter, system-ui, sans-serif;
   color: var(--ink);
   background: var(--bg);
-}
-
-h1,
-h2,
-.brand-name {
-  font-family: Roboto, Inter, sans-serif;
-  font-weight: 300;
-  letter-spacing: -0.02em;
 }
 
 .site-header,
@@ -67,7 +59,7 @@ h2,
 .header-inner {
   justify-content: space-between;
   gap: 1rem;
-  min-height: 4rem;
+  min-height: 3.5rem;
 }
 
 .brand {
@@ -89,25 +81,6 @@ h2,
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.5rem;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.25rem;
-  padding: 0.4rem 0.85rem;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink);
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-
-.btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-ink);
 }
 
 .footer-inner {

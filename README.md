@@ -2,7 +2,7 @@
 
 # Together chat API on Render (TypeScript)
 
-Authenticated single-turn `POST /chat` backed by [Together AI](https://docs.together.ai/docs/render-chat-api), running as a Render web service. Express forwards one user message to chat completions and returns the reply, model ID, and token usage. The landing page keeps a browser-side thread and sends it to `POST /ui/chat`.
+Authenticated single-turn `POST /chat` backed by [Together AI](https://docs.together.ai/docs/render-chat-api), running as a Render web service. Express forwards one user message to chat completions and returns the reply, model ID, and token usage. The landing page keeps a browser-side thread and sends it to `POST /ui/chat`. That extra route exists so the browser never sees `CHAT_API_KEY`, which the [Together guide](https://docs.together.ai/docs/render-chat-api) says not to embed in client code.
 
 <p>
   <a href="https://render.com/deploy?repo=https://github.com/ojusave/together-render-chat-ts">

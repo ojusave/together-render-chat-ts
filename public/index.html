@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Together chat API (TypeScript)</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/render-dds.css" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -16,13 +17,13 @@
         </div>
         <nav class="header-actions">
           <a
-            class="btn btn-primary"
+            class="dds-btn-primary"
             href="https://render.com/deploy?repo=https://github.com/ojusave/together-render-chat-ts"
           >
             <span class="full">Deploy to Render</span>
             <span class="short">Deploy</span>
           </a>
-          <a class="btn" id="signup" href="https://dashboard.render.com/register">
+          <a class="dds-btn-ghost" id="signup" href="https://dashboard.render.com/register">
             <span class="full">Sign up on Render</span>
             <span class="short">Sign up</span>
           </a>
@@ -37,32 +38,36 @@
           <p id="health" class="status">Checking model…</p>
         </div>
         <div id="thread" class="thread">
-          <p class="empty hint">
-            This thread stays in the browser, so follow-ups remember earlier
-            turns. Inference uses the Together key set on this Render service.
-          </p>
+          <div id="lane" class="lane">
+            <p class="empty hint">
+              Follow-ups stay in this thread. Enter sends, Shift+Enter adds a
+              line. Inference uses the Together key on this Render service.
+            </p>
+          </div>
         </div>
         <form id="chat-form" class="composer">
-          <label class="visually-hidden" for="message">Message</label>
-          <textarea
-            id="message"
-            name="message"
-            maxlength="8000"
-            required
-            placeholder="In one sentence, what is a vector database?"
-          ></textarea>
-          <button id="send" type="submit">Send</button>
+          <div class="lane composer-lane">
+            <label class="visually-hidden" for="message">Message</label>
+            <textarea
+              id="message"
+              name="message"
+              maxlength="8000"
+              required
+              placeholder="In one sentence, what is a vector database?"
+            ></textarea>
+            <button id="send" class="dds-btn-primary" type="submit">Send</button>
+          </div>
+          <p id="status" class="visually-hidden" aria-live="polite"></p>
         </form>
       </section>
 
       <aside class="side">
         <h2>How this works</h2>
         <p>
-          TypeScript Express on Render. This page sends the full thread to
-          <code>POST /ui/chat</code>. External clients still use bearer
+          TypeScript Express on Render. This page sends the thread to
+          <code>POST /ui/chat</code>. API clients use bearer
           <code>CHAT_API_KEY</code> on single-turn <code>POST /chat</code>.
         </p>
-        <p id="status" class="status" aria-live="polite"></p>
         <pre>curl -X POST "$SERVICE_URL/chat" \
   -H "Authorization: Bearer $CHAT_API_KEY" \
   -H "Content-Type: application/json" \
