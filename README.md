@@ -49,7 +49,7 @@ The Blueprint is the TypeScript path from Together's [Build a chat API on Render
 
 | Resource | Type | Plan | Notes |
 | --- | --- | --- | --- |
-| `together-chat-ts` | Web service | Free | Spins down after 15 minutes idle |
+| `together-chat-ts` | Web service | Starter | Always-on paid instance |
 
 Default region: **Oregon** unless you change it in the Dashboard. This service stores no chat history.
 
@@ -66,8 +66,8 @@ Default region: **Oregon** unless you change it in the Dashboard. This service s
 1. Click **Deploy to Render** above.
 2. Paste `TOGETHER_API_KEY` and `CHAT_API_KEY` when Render prompts for secrets.
 3. Wait until the service is **Live** (about 2 to 4 minutes on first build).
-4. Open the service URL. The page should show the configured model from `GET /health`.
-5. Send one authenticated request (or use the form on `/` and paste `CHAT_API_KEY` there).
+4. Open the service URL. The page chats using the Together key already on the service.
+5. For the HTTP API, send `Authorization: Bearer $CHAT_API_KEY` to `POST /chat`.
 
 ```bash
 export SERVICE_URL="https://together-chat-ts-xxxx.onrender.com"
@@ -109,10 +109,10 @@ Do not embed `CHAT_API_KEY` in browser or mobile app code. The shared token is a
 
 | Resource | Approx. monthly |
 | --- | ---: |
-| Web service (Free) | $0 |
+| Web service (Starter) | ~$7 |
 | Together inference | Billed by Together |
 
-A free Render web service sleeps after 15 minutes without traffic. The next request can take about a minute to start. Together usage is separate from Render hosting.
+Starter stays up. Together usage is separate from Render hosting.
 
 ## Troubleshooting
 
@@ -122,7 +122,7 @@ A free Render web service sleeps after 15 minutes without traffic. The next requ
 | Health check fails | Confirm the process listens on `0.0.0.0` and `PORT`, and that both secrets are set so the process can start. |
 | `401` on `/chat` | Send `Authorization: Bearer` plus the same `CHAT_API_KEY` value stored on the service. |
 | `502` with `upstreamStatus` | Together rejected the call. Check the key, model ID, and Together credit balance. |
-| Slow first request | Free instances spin down. Use a paid instance if you need consistent latency. |
+| Slow first request | Confirm the service is Live and that `TOGETHER_API_KEY` is set. |
 
 ## Project Structure
 

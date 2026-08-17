@@ -4,69 +4,74 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Together chat API (TypeScript)</title>
-    <link rel="icon" href="https://render.com/favicon.ico" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
-      <div class="brand">
-        <img src="https://render.com/favicon.ico" alt="" width="20" height="20" />
-        Together chat API
+      <div class="header-inner">
+        <div class="brand">
+          <img src="/favicon.svg" alt="" width="24" height="24" />
+          <span class="brand-name">Together chat API</span>
+        </div>
+        <nav class="header-actions">
+          <a
+            class="btn btn-primary"
+            href="https://render.com/deploy?repo=https://github.com/ojusave/together-render-chat-ts"
+          >
+            <span class="full">Deploy to Render</span>
+            <span class="short">Deploy</span>
+          </a>
+          <a class="btn" id="signup" href="https://dashboard.render.com/register">
+            <span class="full">Sign up on Render</span>
+            <span class="short">Sign up</span>
+          </a>
+        </nav>
       </div>
-      <nav class="header-actions">
-        <a
-          class="btn btn-primary"
-          href="https://render.com/deploy?repo=https://github.com/ojusave/together-render-chat-ts"
-        >
-          <span class="full">Deploy to Render</span>
-          <span class="short">Deploy</span>
-        </a>
-        <a class="btn" id="signup" href="https://dashboard.render.com/register">
-          <span class="full">Sign up on Render</span>
-          <span class="short">Sign up</span>
-        </a>
-      </nav>
     </header>
 
-    <main>
-      <h1>Single-turn chat on Render</h1>
-      <p class="lede">
-        TypeScript Express service that authenticates
-        <code>POST /chat</code>, calls Together AI, and returns the reply as JSON.
-      </p>
-      <p id="health" class="status">Checking health…</p>
+    <main class="app">
+      <section class="chat-pane">
+        <div class="chat-toolbar">
+          <h1>Single-turn chat</h1>
+          <p id="health" class="status">Checking model…</p>
+        </div>
+        <div id="thread" class="thread">
+          <p class="empty hint">
+            Ask a question. Inference uses the Together key set on this Render
+            service.
+          </p>
+        </div>
+        <form id="chat-form" class="composer">
+          <label class="visually-hidden" for="message">Message</label>
+          <textarea
+            id="message"
+            name="message"
+            maxlength="8000"
+            required
+            placeholder="In one sentence, what is a vector database?"
+          ></textarea>
+          <button id="send" type="submit">Send</button>
+        </form>
+      </section>
 
-      <form id="chat-form" class="card">
-        <label for="chat-key">CHAT_API_KEY</label>
-        <input
-          id="chat-key"
-          name="chat-key"
-          type="password"
-          autocomplete="off"
-          required
-          placeholder="Paste the Render env value. Do not commit it."
-        />
-        <label for="message">Message</label>
-        <textarea
-          id="message"
-          name="message"
-          maxlength="8000"
-          required
-          placeholder="In one sentence, what is a vector database?"
-        ></textarea>
-        <button id="send" type="submit">Send</button>
+      <aside class="side">
+        <h2>How this works</h2>
+        <p>
+          TypeScript Express on Render. This page calls <code>POST /ui/chat</code>
+          with the service env. External clients still use bearer
+          <code>CHAT_API_KEY</code> on <code>POST /chat</code>.
+        </p>
         <p id="status" class="status" aria-live="polite"></p>
-        <pre id="output"></pre>
-      </form>
-
-      <p class="hint">
-        The page never embeds the key. Paste it from Render Environment, then
-        send one message.
-      </p>
+        <pre>curl -X POST "$SERVICE_URL/chat" \
+  -H "Authorization: Bearer $CHAT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Hello"}'</pre>
+      </aside>
     </main>
 
     <footer class="site-footer">
-      <nav>
+      <nav class="footer-inner">
         <a href="https://github.com/ojusave/together-render-chat-ts"
           >GitHub repository</a
         >
