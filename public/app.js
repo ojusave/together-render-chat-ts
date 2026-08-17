@@ -8,6 +8,9 @@ const sendEl = document.getElementById("send");
 const threadEl = document.getElementById("thread");
 const statusEl = document.getElementById("status");
 
+/** @type {{ role: "user" | "assistant"; content: string }[]} */
+const history = [];
+
 if (signup instanceof HTMLAnchorElement) {
   signup.href = renderSignupUrlWithUtms("navbar_button");
 }
@@ -46,6 +49,7 @@ form?.addEventListener("submit", async (event) => {
   if (!message) return;
 
   addBubble("user", message);
+  history.push({ role: "user", content: message });
   if (messageEl instanceof HTMLTextAreaElement) messageEl.value = "";
   if (sendEl instanceof HTMLButtonElement) sendEl.disabled = true;
   if (statusEl) {
@@ -57,13 +61,16 @@ form?.addEventListener("submit", async (event) => {
     const res = await fetch("/ui/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ messages: history.slice(-40) }),
     });
     const data = await res.json();
     if (!res.ok) {
-      throw new Error(data.error || data.detail?.message || data.detail || `HTTP ${res.status}`);
+      throw new Error(
+        data.error || data.detail?.message || data.detail || `HTTP ${res.status}`
+      );
     }
     addBubble("assistant", data.reply);
+    history.push({ role: "assistant", content: data.reply });
     if (statusEl) statusEl.textContent = "";
   } catch (error) {
     const text = error instanceof Error ? error.message : "Request failed.";

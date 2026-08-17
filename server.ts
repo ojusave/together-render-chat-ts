@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import express, { type ErrorRequestHandler } from "express";
 
 const app = express();
-app.use(express.json({ limit: "16kb" }));
+app.use(express.json({ limit: "128kb" }));
 
 const TOGETHER_URL = "https://api.together.ai/v1/chat/completions";
 const MODEL = process.env.TOGETHER_MODEL ?? "Qwen/Qwen3.5-9B";
@@ -35,6 +35,8 @@ function isAuthorized(header: string | undefined): boolean {
   );
 }
 
+type ChatTurn = { role: "user" | "assistant"; content: string };
+
 function readMessage(body: unknown): string | null {
   const message =
     typeof body === "object" && body !== null && "message" in body
@@ -46,7 +48,33 @@ function readMessage(body: unknown): string | null {
   return message.trim();
 }
 
-async function completeChat(message: string): Promise<ChatResult> {
+function readMessages(body: unknown): ChatTurn[] | null {
+  const raw =
+    typeof body === "object" && body !== null && "messages" in body
+      ? (body as { messages?: unknown }).messages
+      : undefined;
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const cleaned: ChatTurn[] = [];
+  for (const turn of raw.slice(-40)) {
+    if (typeof turn !== "object" || turn === null) return null;
+    const role = "role" in turn ? String((turn as { role: unknown }).role) : "";
+    const content =
+      "content" in turn ? (turn as { content?: unknown }).content : undefined;
+    if (
+      (role !== "user" && role !== "assistant") ||
+      typeof content !== "string" ||
+      !content.trim() ||
+      content.length > 8000
+    ) {
+      return null;
+    }
+    cleaned.push({ role, content: content.trim() });
+  }
+  if (cleaned[cleaned.length - 1]?.role !== "user") return null;
+  return cleaned;
+}
+
+async function completeChat(messages: ChatTurn[]): Promise<ChatResult> {
   try {
     const upstream = await fetch(TOGETHER_URL, {
       method: "POST",
@@ -56,7 +84,7 @@ async function completeChat(message: string): Promise<ChatResult> {
       },
       body: JSON.stringify({
         model: MODEL,
-        messages: [{ role: "user", content: message }],
+        messages,
         reasoning: { enabled: false },
         max_tokens: 512,
       }),
@@ -117,20 +145,20 @@ app.post("/chat", async (req, res) => {
         'Body must include a non-empty "message" string of at most 8000 characters.',
     });
   }
-  const result = await completeChat(message);
+  const result = await completeChat([{ role: "user", content: message }]);
   if (!result.ok) return res.status(result.status).json(result.body);
   return res.json({ model: result.model, reply: result.reply, usage: result.usage });
 });
 
 app.post("/ui/chat", async (req, res) => {
-  const message = readMessage(req.body);
-  if (!message) {
+  const messages = readMessages(req.body);
+  if (!messages) {
     return res.status(400).json({
       error:
-        'Body must include a non-empty "message" string of at most 8000 characters.',
+        'Body must include a "messages" array ending in a user turn.',
     });
   }
-  const result = await completeChat(message);
+  const result = await completeChat(messages);
   if (!result.ok) return res.status(result.status).json(result.body);
   return res.json({ model: result.model, reply: result.reply, usage: result.usage });
 });

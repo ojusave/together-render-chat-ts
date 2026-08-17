@@ -33,13 +33,13 @@
     <main class="app">
       <section class="chat-pane">
         <div class="chat-toolbar">
-          <h1>Single-turn chat</h1>
+          <h1>Chat</h1>
           <p id="health" class="status">Checking model…</p>
         </div>
         <div id="thread" class="thread">
           <p class="empty hint">
-            Ask a question. Inference uses the Together key set on this Render
-            service.
+            This thread stays in the browser, so follow-ups remember earlier
+            turns. Inference uses the Together key set on this Render service.
           </p>
         </div>
         <form id="chat-form" class="composer">
@@ -58,9 +58,9 @@
       <aside class="side">
         <h2>How this works</h2>
         <p>
-          TypeScript Express on Render. This page calls <code>POST /ui/chat</code>
-          with the service env. External clients still use bearer
-          <code>CHAT_API_KEY</code> on <code>POST /chat</code>.
+          TypeScript Express on Render. This page sends the full thread to
+          <code>POST /ui/chat</code>. External clients still use bearer
+          <code>CHAT_API_KEY</code> on single-turn <code>POST /chat</code>.
         </p>
         <p id="status" class="status" aria-live="polite"></p>
         <pre>curl -X POST "$SERVICE_URL/chat" \
