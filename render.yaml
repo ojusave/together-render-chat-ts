@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: together-chat-ts
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: TOGETHER_API_KEY
+        sync: false
+      - key: CHAT_API_KEY
+        sync: false
+      - key: TOGETHER_MODEL
+        value: Qwen/Qwen3.5-9B
