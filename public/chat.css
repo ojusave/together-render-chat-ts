@@ -16,7 +16,7 @@
 
 .chat-toolbar {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem var(--gutter);
@@ -27,6 +27,25 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 600;
+}
+
+.model-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.model-picker select {
+  max-width: min(22rem, 55vw);
+  min-height: 2.25rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-input);
+  background: var(--color-input-background);
+  color: var(--ink);
+  font: inherit;
 }
 
 .thread {
@@ -156,6 +175,16 @@ textarea:focus {
   .chat-pane {
     border-right: 0;
     min-height: 70dvh;
+  }
+
+  .chat-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .model-picker,
+  .model-picker select {
+    width: 100%;
+    max-width: none;
   }
 }
 

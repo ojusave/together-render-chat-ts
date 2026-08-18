@@ -1,47 +1,26 @@
 import { renderSignupUrlWithUtms } from "./renderSignup.js";
+import { createThread } from "./js/chat.js";
+import { loadModelPicker, selectedModel } from "./js/models.js";
 
 const signup = document.getElementById("signup");
-const healthEl = document.getElementById("health");
 const form = document.getElementById("chat-form");
 const messageEl = document.getElementById("message");
 const sendEl = document.getElementById("send");
 const threadEl = document.getElementById("thread");
 const laneEl = document.getElementById("lane");
 const statusEl = document.getElementById("status");
-
-/** @type {{ role: "user" | "assistant"; content: string }[]} */
-const history = [];
+const modelEl = document.getElementById("model");
 
 if (signup instanceof HTMLAnchorElement) {
   signup.href = renderSignupUrlWithUtms("navbar_button");
 }
 
-function addBubble(role, text) {
-  if (!laneEl) return;
-  const empty = laneEl.querySelector(".empty");
-  empty?.remove();
-  const bubble = document.createElement("div");
-  bubble.className = `bubble ${role}`;
-  bubble.textContent = text;
-  laneEl.append(bubble);
-  if (threadEl) threadEl.scrollTop = threadEl.scrollHeight;
-  return bubble;
-}
+const thread = createThread(laneEl, threadEl);
 
-async function loadHealth() {
-  try {
-    const res = await fetch("/health");
-    const data = await res.json();
-    if (healthEl) {
-      healthEl.textContent = data.ok ? data.model : "Health check failed.";
-      healthEl.className = data.ok ? "status ok" : "status err";
-    }
-  } catch {
-    if (healthEl) {
-      healthEl.textContent = "Could not reach /health.";
-      healthEl.className = "status err";
-    }
-  }
+if (modelEl instanceof HTMLSelectElement) {
+  loadModelPicker(modelEl).catch(() => {
+    if (statusEl) statusEl.textContent = "Could not load Together models.";
+  });
 }
 
 async function sendMessage() {
@@ -50,33 +29,15 @@ async function sendMessage() {
   if (!message) return;
   if (sendEl instanceof HTMLButtonElement && sendEl.disabled) return;
 
-  addBubble("user", message);
-  history.push({ role: "user", content: message });
   if (messageEl instanceof HTMLTextAreaElement) messageEl.value = "";
   if (sendEl instanceof HTMLButtonElement) sendEl.disabled = true;
   if (statusEl) statusEl.textContent = "Thinking…";
-  const pending = addBubble("assistant pending", "Thinking…");
 
   try {
-    const res = await fetch("/ui/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: history.slice(-40) }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(
-        data.error || data.detail?.message || data.detail || `HTTP ${res.status}`
-      );
-    }
-    pending?.remove();
-    addBubble("assistant", data.reply);
-    history.push({ role: "assistant", content: data.reply });
+    await thread.send(message, selectedModel(modelEl));
     if (statusEl) statusEl.textContent = "";
   } catch (error) {
     const text = error instanceof Error ? error.message : "Request failed.";
-    pending?.remove();
-    addBubble("error", text);
     if (statusEl) statusEl.textContent = text;
   } finally {
     if (sendEl instanceof HTMLButtonElement) sendEl.disabled = false;
@@ -96,5 +57,3 @@ messageEl?.addEventListener("keydown", (event) => {
     void sendMessage();
   }
 });
-
-loadHealth();

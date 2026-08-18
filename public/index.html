@@ -35,13 +35,18 @@
       <section class="chat-pane">
         <div class="chat-toolbar">
           <h1>Chat</h1>
-          <p id="health" class="status">Checking model…</p>
+          <label class="model-picker">
+            <span>Model</span>
+            <select id="model" name="model">
+              <option value="Qwen/Qwen3.5-9B">Qwen/Qwen3.5-9B</option>
+            </select>
+          </label>
         </div>
         <div id="thread" class="thread">
           <div id="lane" class="lane">
             <p class="empty hint">
-              Follow-ups stay in this thread. Enter sends, Shift+Enter adds a
-              line. Inference uses the Together key on this Render service.
+              Follow-ups stay in this thread. Pick a Together model, then ask a
+              question. Enter sends; Shift+Enter adds a line.
             </p>
           </div>
         </div>
@@ -64,9 +69,10 @@
       <aside class="side">
         <h2>How this works</h2>
         <p>
-          TypeScript Express on Render. This page sends the thread to
-          <code>POST /ui/chat</code>. API clients use bearer
-          <code>CHAT_API_KEY</code> on single-turn <code>POST /chat</code>.
+          TypeScript Express on Render. This page lists Together text models
+          and sends the thread to <code>POST /ui/chat</code>. API clients use
+          bearer <code>CHAT_API_KEY</code> on single-turn <code>POST /chat</code>,
+          which always uses <code>TOGETHER_MODEL</code>.
         </p>
         <pre>curl -X POST "$SERVICE_URL/chat" \
   -H "Authorization: Bearer $CHAT_API_KEY" \

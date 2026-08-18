@@ -22,12 +22,6 @@ type TogetherResponse = {
   usage?: unknown;
 };
 
-type ChatTurn = { role: "user" | "assistant"; content: string };
-
-type ChatResult =
-  | { ok: true; model: string; reply: string; usage: unknown }
-  | { ok: false; status: number; body: Record<string, unknown> };
-
 function isAuthorized(header: string | undefined): boolean {
   if (!header?.startsWith("Bearer ")) return false;
 
@@ -36,66 +30,6 @@ function isAuthorized(header: string | undefined): boolean {
   return (
     supplied.length === expected.length && timingSafeEqual(supplied, expected)
   );
-}
-
-async function completeChat(messages: ChatTurn[]): Promise<ChatResult> {
-  try {
-    const upstream = await fetch(TOGETHER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${TOGETHER_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages,
-        reasoning: { enabled: false },
-        max_tokens: 512,
-      }),
-      signal: AbortSignal.timeout(60_000),
-    });
-
-    if (!upstream.ok) {
-      const detail = (await upstream.text()).slice(0, 500);
-      console.error("Together error", upstream.status, detail);
-      return {
-        ok: false,
-        status: 502,
-        body: {
-          error: "Upstream inference failed",
-          upstreamStatus: upstream.status,
-        },
-      };
-    }
-
-    const data = (await upstream.json()) as TogetherResponse;
-    const reply = data.choices?.[0]?.message?.content;
-    if (typeof reply !== "string" || !reply) {
-      return {
-        ok: false,
-        status: 502,
-        body: { error: "Together returned an invalid response." },
-      };
-    }
-
-    return {
-      ok: true,
-      model: data.model ?? MODEL,
-      reply,
-      usage: data.usage,
-    };
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "TimeoutError") {
-      return {
-        ok: false,
-        status: 504,
-        body: { error: "Together timed out after 60 seconds." },
-      };
-    }
-
-    console.error("Together request failed", error);
-    return { ok: false, status: 502, body: { error: "Could not reach Together." } };
-  }
 }
 
 app.get("/health", (_req, res) => {
@@ -115,60 +49,55 @@ app.post("/chat", async (req, res) => {
     });
   }
 
-  const result = await completeChat([
-    { role: "user", content: message.trim() },
-  ]);
-  if (!result.ok) return res.status(result.status).json(result.body);
-  return res.json({
-    model: result.model,
-    reply: result.reply,
-    usage: result.usage,
-  });
-});
-
-function readMessages(body: unknown): ChatTurn[] | null {
-  const raw =
-    typeof body === "object" && body !== null && "messages" in body
-      ? (body as { messages?: unknown }).messages
-      : undefined;
-  if (!Array.isArray(raw) || raw.length === 0) return null;
-  const cleaned: ChatTurn[] = [];
-  for (const turn of raw.slice(-40)) {
-    if (typeof turn !== "object" || turn === null) return null;
-    const role = "role" in turn ? String((turn as { role: unknown }).role) : "";
-    const content =
-      "content" in turn ? (turn as { content?: unknown }).content : undefined;
-    if (
-      (role !== "user" && role !== "assistant") ||
-      typeof content !== "string" ||
-      !content.trim() ||
-      content.length > 8000
-    ) {
-      return null;
-    }
-    cleaned.push({ role, content: content.trim() });
-  }
-  if (cleaned[cleaned.length - 1]?.role !== "user") return null;
-  return cleaned;
-}
-
-app.post("/ui/chat", async (req, res) => {
-  const messages = readMessages(req.body);
-  if (!messages) {
-    return res.status(400).json({
-      error: 'Body must include a "messages" array ending in a user turn.',
+  try {
+    const upstream = await fetch(TOGETHER_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${TOGETHER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{ role: "user", content: message.trim() }],
+        reasoning: { enabled: false },
+        max_tokens: 512,
+      }),
+      signal: AbortSignal.timeout(60_000),
     });
-  }
-  const result = await completeChat(messages);
-  if (!result.ok) return res.status(result.status).json(result.body);
-  return res.json({
-    model: result.model,
-    reply: result.reply,
-    usage: result.usage,
-  });
-});
 
-app.use(express.static("public"));
+    if (!upstream.ok) {
+      const detail = (await upstream.text()).slice(0, 500);
+      console.error("Together error", upstream.status, detail);
+      return res.status(502).json({
+        error: "Upstream inference failed",
+        upstreamStatus: upstream.status,
+      });
+    }
+
+    const data = (await upstream.json()) as TogetherResponse;
+    const reply = data.choices?.[0]?.message?.content;
+    if (typeof reply !== "string" || !reply) {
+      return res
+        .status(502)
+        .json({ error: "Together returned an invalid response." });
+    }
+
+    return res.json({
+      model: data.model ?? MODEL,
+      reply,
+      usage: data.usage,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "TimeoutError") {
+      return res
+        .status(504)
+        .json({ error: "Together timed out after 60 seconds." });
+    }
+
+    console.error("Together request failed", error);
+    return res.status(502).json({ error: "Could not reach Together." });
+  }
+});
 
 const requestErrorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   const type =
@@ -188,5 +117,4 @@ const requestErrorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
 };
 app.use(requestErrorHandler);
 
-const port = Number(process.env.PORT) || 3000;
-app.listen(port, "0.0.0.0", () => console.log(`listening on ${port}`));
+export { app };
