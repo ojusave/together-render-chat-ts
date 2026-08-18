@@ -1,8 +1,8 @@
 <div align="center">
 
-# Together chat API on Render (TypeScript)
+# Together Chat API
 
-Authenticated single-turn `POST /chat` backed by [Together AI](https://docs.together.ai/docs/render-chat-api), running as a Render web service. Express forwards one user message to chat completions and returns the reply, model ID, and token usage. The landing page keeps a browser-side thread and sends it to `POST /ui/chat`. That extra route exists so the browser never sees `CHAT_API_KEY`, which the [Together guide](https://docs.together.ai/docs/render-chat-api) says not to embed in client code.
+An authenticated chat API on **Render**, backed by **Together AI** chat completions. Express accepts a bearer token and a message, calls Together, and returns the reply, model ID, and token usage.
 
 <p>
   <a href="https://render.com/deploy?repo=https://github.com/ojusave/together-render-chat-ts">
@@ -17,57 +17,106 @@ Authenticated single-turn `POST /chat` backed by [Together AI](https://docs.toge
   <a href="https://docs.together.ai/docs/render-chat-api">
     <img src="https://img.shields.io/badge/Together-Chat%20API-0f6fff" alt="Together AI" />
   </a>
-  <a href="https://github.com/ojusave/together-render-chat-python">
-    <img src="https://img.shields.io/badge/Python-FastAPI%20sibling-3776AB?logo=python&logoColor=white" alt="Python sibling" />
+  <a href="https://discord.gg/gvC7ceS9YS">
+    <img src="https://img.shields.io/badge/Discord-Render%20Developers-5865F2?logo=discord&logoColor=white" alt="Discord" />
+  </a>
+  <a href="https://discord.gg/9Rk6sSeWEG">
+    <img src="https://img.shields.io/badge/Discord-Together%20AI-5865F2?logo=discord&logoColor=white" alt="Together AI Discord" />
   </a>
 </p>
 
 </div>
 
-## What This Template Shows
+## What This Demo Shows
 
-The Blueprint is the TypeScript path from Together's [Build a chat API on Render](https://docs.together.ai/docs/render-chat-api) guide, flattened into its own repo so the Deploy button can point at a single `render.yaml`.
+This repo is the TypeScript path from Together's [Build a chat API on Render](https://docs.together.ai/docs/render-chat-api) guide:
 
-| Piece | Role |
+| Platform | Role |
 | --- | --- |
-| **[Together AI chat completions](https://docs.together.ai/docs/inference/chat/overview)** | Server-side inference with `TOGETHER_API_KEY` |
-| **[Render web service](https://render.com/docs/web-services)** | Public HTTPS, health checks, `0.0.0.0:$PORT` |
-| **`CHAT_API_KEY`** | Separate bearer token for callers of `POST /chat` |
+| **[Render Web Services](https://render.com/docs/web-services)** | Hosts the Express API, health checks, and landing page on `0.0.0.0:$PORT` |
+| **[Together AI](https://docs.together.ai/docs/inference/chat/overview)** | Runs chat completions with `TOGETHER_API_KEY` (default `Qwen/Qwen3.5-9B`) |
+| **`CHAT_API_KEY`** | Separate bearer token for `POST /chat`, so the Together key never leaves the server |
+
+Python sibling: [together-render-chat-python](https://github.com/ojusave/together-render-chat-python).
 
 ## Architecture
 
-![Architecture diagram](static/images/architecture-diagram.png)
+![Architecture](static/images/architecture-diagram.png)
 
 ![Pipeline flow](static/images/pipeline-flow.png)
 
 ### How It Works
 
-1. A trusted client sends `Authorization: Bearer $CHAT_API_KEY` and `{"message":"..."}` to `POST /chat`.
-2. The service rejects missing or oversized messages before it spends Together credits.
-3. It calls `https://api.together.ai/v1/chat/completions` with a 60 second timeout.
-4. It returns `{ model, reply, usage }` or an explicit 401 / 400 / 502 / 504.
+1. **Browser** talks to `POST /ui/chat` with the thread. A trusted API client talks to `POST /chat` with `Authorization: Bearer $CHAT_API_KEY`.
+2. **Express** on Render validates the body before it spends Together credits.
+3. The service calls `https://api.together.ai/v1/chat/completions` and waits up to 60 seconds.
+4. It returns `{ model, reply, usage }`, or an explicit 401 / 400 / 502 / 504.
 
-| Resource | Type | Plan | Notes |
-| --- | --- | --- | --- |
-| `together-chat-ts` | Web service | Starter | Always-on paid instance |
+| Route | Together call | What it does |
+| --- | --- | --- |
+| `GET /health` | — | Unauthenticated probe for Render |
+| `POST /chat` | One user message | Documented API: bearer `CHAT_API_KEY` required |
+| `POST /ui/chat` | Last 40 thread turns | Landing-page helper so the browser never sees `CHAT_API_KEY` |
 
-Default region: **Oregon** unless you change it in the Dashboard. This service stores no chat history.
+The service stores no chat history. The browser keeps the thread in memory.
 
 ## Quick Start
 
 ### Prerequisites
 
-- A [Render account](https://dashboard.render.com/register?utm_source=github&utm_medium=referral&utm_campaign=ojus_demos&utm_content=readme_link)
-- A [Together AI](https://api.together.ai/) account with an active credit balance and a project API key
-- A caller secret: `openssl rand -hex 32` (this is `CHAT_API_KEY`, not the Together key)
+- [Render account](https://dashboard.render.com/register?utm_source=github&utm_medium=referral&utm_campaign=ojus_demos&utm_content=readme_link)
+- [Together AI account](https://api.together.ai/) with an active credit balance and a project API key
+- A caller secret: `openssl rand -hex 32` (this becomes `CHAT_API_KEY`, not the Together key)
 
 ### Deploy
 
-1. Click **Deploy to Render** above.
-2. Paste `TOGETHER_API_KEY` and `CHAT_API_KEY` when Render prompts for secrets.
-3. Wait until the service is **Live** (about 2 to 4 minutes on first build).
-4. Open the service URL. The page chats using the Together key already on the service.
-5. For the HTTP API, send `Authorization: Bearer $CHAT_API_KEY` to `POST /chat`.
+1. Click **Deploy to Render** above
+2. You'll be prompted for:
+   - `TOGETHER_API_KEY` — [Get one here](https://api.together.ai/)
+   - `CHAT_API_KEY` — the hex secret you generated
+3. Wait until the service is **Live**
+4. Open the web service URL and send a message in the page
+
+## Features
+
+| Feature | Description |
+| --- | --- |
+| **Authenticated chat** | `POST /chat` compares the bearer token with `timingSafeEqual` |
+| **Browser thread** | The landing page sends conversation history to `POST /ui/chat` |
+| **Public health check** | `GET /health` is unauthenticated so Render can probe it |
+| **Upstream mapping** | Together 4xx/5xx become 502; 60s timeouts become 504 |
+| **Swap the model** | Change `TOGETHER_MODEL` in the Dashboard and redeploy |
+
+## Configuration
+
+| Variable | Where | Description |
+| --- | --- | --- |
+| `TOGETHER_API_KEY` | Web service | [Together project API key](https://api.together.ai/) |
+| `CHAT_API_KEY` | Web service | Bearer token for `POST /chat` |
+| `TOGETHER_MODEL` | Web service | Defaults to `Qwen/Qwen3.5-9B` |
+| `PORT` | Web service | Set by Render; the server binds `0.0.0.0:$PORT` |
+
+> [!WARNING]
+> Do not embed `CHAT_API_KEY` in browser or mobile app code. The shared token is a server-to-server guard for this demo. The landing page uses `POST /ui/chat` for that reason.
+
+## Project Structure
+
+```
+server.ts         Express health + chat handler
+public/           Landing page (Deploy / Sign up / chat UI)
+static/images/    Architecture diagrams
+render.yaml       Render Blueprint
+package.json      Node 22–24, Express 5
+```
+
+## API Routes
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/` | Landing page |
+| `GET` | `/health` | `{ ok, model }` |
+| `POST` | `/chat` | Single-turn chat. Requires `Authorization: Bearer $CHAT_API_KEY` and `{"message":"..."}` |
+| `POST` | `/ui/chat` | Multi-turn helper for the page. Body is `{"messages":[{"role","content"}, ...]}` |
 
 ```bash
 export SERVICE_URL="https://together-chat-ts-xxxx.onrender.com"
@@ -85,35 +134,6 @@ curl -X POST "$SERVICE_URL/chat" \
 unset CHAT_API_KEY
 ```
 
-Do not embed `CHAT_API_KEY` in browser or mobile app code. The shared token is a server-to-server guard for this demo.
-
-## Features
-
-| Feature | Description |
-| --- | --- |
-| **Authenticated chat** | `POST /chat` requires a bearer token compared with `timingSafeEqual` |
-| **Public health check** | `GET /health` is unauthenticated so Render can probe it |
-| **Upstream mapping** | Together 4xx/5xx become 502; 60s timeouts become 504 |
-| **Swap the model** | Change `TOGETHER_MODEL` in the Dashboard and redeploy |
-
-## Configuration
-
-| Variable | Source | Description |
-| --- | --- | --- |
-| `TOGETHER_API_KEY` | Required | Project-scoped Together API key |
-| `CHAT_API_KEY` | Required | Bearer token callers use against this service |
-| `TOGETHER_MODEL` | Optional | Defaults to `Qwen/Qwen3.5-9B` |
-| `PORT` | Wired | Set by Render; the server binds `0.0.0.0:$PORT` |
-
-## Cost
-
-| Resource | Approx. monthly |
-| --- | ---: |
-| Web service (Starter) | ~$7 |
-| Together inference | Billed by Together |
-
-Starter stays up. Together usage is separate from Render hosting.
-
 ## Troubleshooting
 
 | Problem | Solution |
@@ -122,30 +142,19 @@ Starter stays up. Together usage is separate from Render hosting.
 | Health check fails | Confirm the process listens on `0.0.0.0` and `PORT`, and that both secrets are set so the process can start. |
 | `401` on `/chat` | Send `Authorization: Bearer` plus the same `CHAT_API_KEY` value stored on the service. |
 | `502` with `upstreamStatus` | Together rejected the call. Check the key, model ID, and Together credit balance. |
-| Slow first request | Confirm the service is Live and that `TOGETHER_API_KEY` is set. |
-
-## Project Structure
-
-```
-render.yaml       Render Blueprint
-server.ts         Express health + chat handler
-public/           Landing page (Deploy / Sign up / tester)
-static/images/    Architecture diagrams
-package.json      Node 22–24, Express 5
-```
+| Follow-ups forget earlier turns | Use the landing page (`POST /ui/chat`). Documented `POST /chat` is single-turn. |
 
 ## Learn More
 
 **Render:**
-- [Web services](https://render.com/docs/web-services)
+- [Render Web Services](https://render.com/docs/web-services)
 - [Deploy to Render button](https://render.com/docs/deploy-to-render-button)
-- [Free plan limits](https://render.com/docs/free)
+- [Render Developers Discord](https://discord.gg/gvC7ceS9YS)
 
-**Upstream:**
+**Together AI:**
 - [Build a chat API on Render](https://docs.together.ai/docs/render-chat-api)
 - [Chat completions](https://docs.together.ai/docs/inference/chat/overview)
-
-Python sibling: [together-render-chat-python](https://github.com/ojusave/together-render-chat-python).
+- [Together AI Discord](https://discord.gg/9Rk6sSeWEG)
 
 ## License
 
