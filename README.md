@@ -74,6 +74,7 @@ Image, embedding, moderation, and rerank models are omitted from the picker: thi
 | **Authenticated chat** | `POST /chat` compares the bearer token with `timingSafeEqual` |
 | **Model picker** | The page lists Together text models from `GET /v1/models` |
 | **Browser thread** | The landing page sends conversation history to `POST /ui/chat` |
+| **Request inspector** | After each reply, the right pane shows JSON, token usage, and a `POST /chat` curl |
 | **Public health check** | `GET /health` is unauthenticated so Render can probe it |
 | **Upstream mapping** | Together 4xx/5xx become 502; 60s timeouts become 504 |
 

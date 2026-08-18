@@ -1,5 +1,6 @@
 import { renderSignupUrlWithUtms } from "./renderSignup.js";
 import { createThread } from "./js/chat.js";
+import { createInspector } from "./js/inspector.js";
 import { loadModelPicker, selectedModel } from "./js/models.js";
 
 const signup = document.getElementById("signup");
@@ -16,7 +17,9 @@ if (signup instanceof HTMLAnchorElement) {
   signup.href = renderSignupUrlWithUtms("navbar_button");
 }
 
-const thread = createThread(laneEl, threadEl);
+const thread = createThread(laneEl, threadEl, {
+  onResult: createInspector(document.getElementById("inspector")).update,
+});
 
 if (modelEl instanceof HTMLSelectElement) {
   loadModelPicker(modelEl, modelFilterEl).catch(() => {

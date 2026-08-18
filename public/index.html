@@ -72,18 +72,69 @@
         </form>
       </section>
 
-      <aside class="side">
-        <h2>How this works</h2>
-        <p>
-          TypeScript Express on Render. This page lists Together text models
-          and sends the thread to <code>POST /ui/chat</code>. API clients use
-          bearer <code>CHAT_API_KEY</code> on single-turn <code>POST /chat</code>,
-          which always uses <code>TOGETHER_MODEL</code>.
+      <aside class="inspector" id="inspector">
+        <div class="inspector-head">
+          <h2>Inspector</h2>
+          <p class="hint">
+            Live view of the last <code>POST /ui/chat</code> call. Documented
+            <code>POST /chat</code> stays single-turn and uses
+            <code>TOGETHER_MODEL</code>.
+          </p>
+        </div>
+        <p id="inspector-empty" class="inspector-empty">
+          Send a message to see the JSON body, token usage, and a curl snippet.
         </p>
-        <pre>curl -X POST "$SERVICE_URL/chat" \
-  -H "Authorization: Bearer $CHAT_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"message":"Hello"}'</pre>
+        <div id="inspector-body" hidden>
+          <div class="stats">
+            <div>
+              <span>Model</span>
+              <strong id="stat-model">-</strong>
+            </div>
+            <div>
+              <span>Prompt tokens</span>
+              <strong id="stat-prompt">-</strong>
+            </div>
+            <div>
+              <span>Completion tokens</span>
+              <strong id="stat-completion">-</strong>
+            </div>
+            <div>
+              <span>Total tokens</span>
+              <strong id="stat-total">-</strong>
+            </div>
+          </div>
+          <section>
+            <div class="section-head">
+              <h3>Request</h3>
+              <button type="button" class="dds-btn-ghost" data-copy="inspector-request">
+                Copy
+              </button>
+            </div>
+            <pre id="inspector-request"></pre>
+          </section>
+          <section>
+            <div class="section-head">
+              <h3>Response</h3>
+              <button type="button" class="dds-btn-ghost" data-copy="inspector-response">
+                Copy
+              </button>
+            </div>
+            <pre id="inspector-response"></pre>
+          </section>
+          <section>
+            <div class="section-head">
+              <h3>POST /chat</h3>
+              <button type="button" class="dds-btn-ghost" data-copy="inspector-curl">
+                Copy
+              </button>
+            </div>
+            <p class="hint">
+              Single-turn API from the Together guide. Replace
+              <code>$SERVICE_URL</code> and <code>$CHAT_API_KEY</code>.
+            </p>
+            <pre id="inspector-curl"></pre>
+          </section>
+        </div>
       </aside>
     </main>
 

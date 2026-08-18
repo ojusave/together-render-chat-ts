@@ -1,7 +1,7 @@
 .app {
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 22rem;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
   min-height: 0;
   width: 100%;
 }
@@ -154,31 +154,96 @@ textarea {
   align-self: stretch;
 }
 
-.side {
-  padding: 1.25rem var(--gutter);
+.inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem var(--gutter) 1.25rem;
   background: var(--bg);
+  border-left: 1px solid var(--line);
 }
 
-.side h2 {
-  margin: 0 0 0.5rem;
+.inspector-head h2,
+.inspector h3 {
+  margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
 }
 
-.side p,
-.status,
-.hint {
+.inspector h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--muted);
-  line-height: 1.5;
-  font-size: 0.92rem;
 }
 
-.side pre {
+.inspector-empty,
+.inspector .hint,
+.status {
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 0.85rem;
+}
+
+.inspector-empty {
+  margin: 0;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.stats div {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.stats span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.stats strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.section-head .dds-btn-ghost {
+  min-height: 1.75rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.inspector pre {
+  margin: 0;
+  max-height: 11rem;
   overflow: auto;
-  padding: 0.85rem;
+  padding: 0.75rem;
   background: #18181b;
   color: #fafafa;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.inspector section {
+  min-width: 0;
 }
 
 .ok {
@@ -197,6 +262,12 @@ textarea {
   .chat-pane {
     border-right: 0;
     min-height: 70dvh;
+  }
+
+  .inspector {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    max-height: 40dvh;
   }
 
   .chat-toolbar {

@@ -1,4 +1,4 @@
-export function createThread(laneEl, threadEl) {
+export function createThread(laneEl, threadEl, { onResult } = {}) {
   /** @type {{ role: "user" | "assistant"; content: string }[]} */
   const history = [];
 
@@ -16,15 +16,13 @@ export function createThread(laneEl, threadEl) {
   async function send(message, model) {
     addBubble("user", message);
     history.push({ role: "user", content: message });
+    const request = { model, messages: history.slice(-40) };
     const pending = addBubble("assistant pending", "Thinking…");
     try {
       const res = await fetch("/ui/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model,
-          messages: history.slice(-40),
-        }),
+        body: JSON.stringify(request),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -35,11 +33,13 @@ export function createThread(laneEl, threadEl) {
       pending?.remove();
       addBubble("assistant", data.reply);
       history.push({ role: "assistant", content: data.reply });
+      onResult?.({ request, response: data });
       return data;
     } catch (error) {
       pending?.remove();
       const text = error instanceof Error ? error.message : "Request failed.";
       addBubble("error", text);
+      onResult?.({ request, error: text });
       throw error;
     }
   }
