@@ -18,8 +18,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.85rem var(--gutter);
+  gap: 0.75rem;
+  padding: 0.75rem var(--gutter);
   border-bottom: 1px solid var(--line);
 }
 
@@ -27,19 +27,26 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .model-picker {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
   min-width: 0;
+  flex: 1 1 auto;
   color: var(--muted);
   font-size: 0.85rem;
 }
 
+.model-picker span {
+  flex-shrink: 0;
+}
+
+.model-picker input,
 .model-picker select {
-  max-width: min(22rem, 55vw);
   min-height: 2.25rem;
   padding: 0.35rem 0.5rem;
   border: 1px solid var(--color-input);
@@ -48,10 +55,30 @@
   font: inherit;
 }
 
+.model-picker input {
+  width: 9rem;
+  flex: 0 1 9rem;
+}
+
+.model-picker select {
+  min-width: 0;
+  max-width: 18rem;
+  flex: 1 1 12rem;
+}
+
+.model-picker input:focus,
+.model-picker select:focus,
+textarea:focus {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 1px;
+}
+
 .thread {
   flex: 1 1 auto;
   overflow: auto;
   padding: 1.25rem var(--gutter);
+  display: flex;
+  flex-direction: column;
 }
 
 .lane {
@@ -59,15 +86,14 @@
   flex-direction: column;
   gap: 0.75rem;
   width: 100%;
-  max-width: 48rem;
 }
 
 .thread .lane {
-  min-height: 100%;
+  margin-top: auto;
 }
 
 .bubble {
-  max-width: 85%;
+  max-width: min(32rem, 72%);
   padding: 0.75rem 0.95rem;
   border: 1px solid var(--line);
   white-space: pre-wrap;
@@ -107,8 +133,8 @@
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0.75rem;
-  align-items: end;
-  min-height: 0;
+  align-items: stretch;
+  width: 100%;
 }
 
 textarea {
@@ -122,14 +148,10 @@ textarea {
   color: var(--ink);
 }
 
-textarea:focus {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 1px;
-}
-
 .composer .dds-btn-primary {
   min-width: 5.5rem;
-  min-height: 3rem;
+  min-height: 100%;
+  align-self: stretch;
 }
 
 .side {
@@ -182,14 +204,20 @@ textarea:focus {
   }
 
   .model-picker,
+  .model-picker input,
   .model-picker select {
     width: 100%;
     max-width: none;
+    flex: 1 1 100%;
   }
 }
 
 @media (max-width: 520px) {
   .composer-lane {
     grid-template-columns: 1fr;
+  }
+
+  .composer .dds-btn-primary {
+    min-height: 3rem;
   }
 }

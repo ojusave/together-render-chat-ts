@@ -10,6 +10,7 @@ const threadEl = document.getElementById("thread");
 const laneEl = document.getElementById("lane");
 const statusEl = document.getElementById("status");
 const modelEl = document.getElementById("model");
+const modelFilterEl = document.getElementById("model-filter");
 
 if (signup instanceof HTMLAnchorElement) {
   signup.href = renderSignupUrlWithUtms("navbar_button");
@@ -18,7 +19,7 @@ if (signup instanceof HTMLAnchorElement) {
 const thread = createThread(laneEl, threadEl);
 
 if (modelEl instanceof HTMLSelectElement) {
-  loadModelPicker(modelEl).catch(() => {
+  loadModelPicker(modelEl, modelFilterEl).catch(() => {
     if (statusEl) statusEl.textContent = "Could not load Together models.";
   });
 }
