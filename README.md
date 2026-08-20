@@ -5,7 +5,7 @@
 An authenticated chat API on **Render**, backed by **Together AI** chat completions. Express accepts a bearer token and a message, calls Together, and returns the reply, model ID, and token usage.
 
 <p>
-  <a href="https://render.com/deploy?repo=https://github.com/ojusave/together-render-chat-ts">
+  <a href="https://render.com/deploy?repo=https://github.com/render-examples/together-render-chat-ts">
     <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
   </a>
 </p>
@@ -37,7 +37,7 @@ This repo is the TypeScript path from Together's [Build a chat API on Render](ht
 | **[Together AI](https://docs.together.ai/docs/inference/chat/overview)** | Chat completions, plus [GET /models](https://docs.together.ai/reference/models) for the picker |
 | **`CHAT_API_KEY`** | Separate bearer token for `POST /chat`, so the Together key never leaves the server |
 
-Python sibling: [together-render-chat-python](https://github.com/ojusave/together-render-chat-python).
+Python sibling: [together-render-chat-python](https://github.com/render-examples/together-render-chat-python).
 
 ### How It Works
 
